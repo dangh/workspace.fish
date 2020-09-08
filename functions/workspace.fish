@@ -54,7 +54,7 @@ function _workspace_add --argument-names branch
       echo "$ws_setup_script" | source
     end
   else
-    _workspace_log workspace `$workspace` is already exists! checkout `$workspace`
+    _workspace_log `$workspace` is already exist!
   end
   _workspace_checkout $branch
 end
@@ -64,8 +64,8 @@ function _workspace_checkout --argument-names branch
   set --local workspace_root (_workspace_root)
   set --local workspace (_workspace_name "$branch")
   if test ! -d "$workspace_root/.ws/$workspace"
-    _workspace_log workspace `$workspace` does not exist!
-    _workspace_log checkout `$workspace` as (set_color magenta)workspace add $workspace(set_color normal)
+    _workspace_log `$workspace` not found!
+    _workspace_log create `$workspace` as (set_color magenta)workspace add $workspace(set_color normal)
     return 1
   end
   cd "$workspace_root/$workspace"
@@ -96,8 +96,8 @@ function _workspace_root
   echo $workspace_root
 end
 
-function _workspace_name --argument-names branch
-  echo $branch
+function _workspace_name
+  string replace --all --regex "[^a-zA-Z0-9-_]" "-" "$argv"
 end
 
 function _workspace_log
