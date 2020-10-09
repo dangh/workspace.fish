@@ -41,7 +41,7 @@ function _workspace_list
   command git -C "$workspace_root/.ws/$git_working_dir" worktree list
 end
 
-function _workspace_add --argument-names branch
+function _workspace_add --argument-names branch --description "create new workspace for new branch"
   set --local workspace_root (_workspace_root)
   set --local workspace (_workspace_name "$branch")
   set --local git_working_dir (cat "$workspace_root/.ws/git_working_dir")
@@ -59,14 +59,23 @@ function _workspace_add --argument-names branch
   _workspace_checkout $branch
 end
 
-function _workspace_checkout --argument-names branch
+function _workspace_checkout --argument-names branch --description "create/checkout workspace for existing branch"
   _workspace_log checkout `$branch`
   set --local workspace_root (_workspace_root)
   set --local workspace (_workspace_name "$branch")
+  set --local git_working_dir (cat "$workspace_root/.ws/git_working_dir")
   if test ! -d "$workspace_root/.ws/$workspace"
-    _workspace_log `$workspace` not found!
-    _workspace_log create `$workspace` as (set_color magenta)workspace add $workspace(set_color normal)
-    return 1
+    if _workspace_branch_exists "$branch"
+      command git -C "$workspace_root/.ws/$git_working_dir" worktree add --guess-remote "$workspace_root/.ws/$workspace" "$branch"
+      command ln -sf "$workspace_root/.ws/$workspace" "$workspace_root"
+      if set --query ws_setup_script
+        cd "$workspace_root/.ws/$workspace"
+        eval $ws_setup_script
+      end
+    else
+      _workspace_log branch `$workspace` not found!
+      _workspace_log create `$workspace` as (set_color magenta)workspace add $workspace(set_color normal)
+    end
   end
   cd "$workspace_root/$workspace"
 end
@@ -79,6 +88,7 @@ function _workspace_remove --argument-names branch
   set --local current_workspace (_workspace_name (command git branch --show-current))
   if test -d "$workspace_root/.ws/$workspace"
     command git -C "$workspace_root/.ws/$git_working_dir" worktree remove "$workspace"
+    command git -C "$workspace_root/.ws/$git_working_dir" branch -d "$branch"
     command rm "$workspace_root/$workspace"
   end
   if test "$workspace" = "$current_workspace"
@@ -102,4 +112,12 @@ end
 
 function _workspace_log
   echo '('(set_color green)workspace(set_color normal)')' $argv
+end
+
+function _workspace_branch_exists --argument-names branch
+  set --local workspace_root (_workspace_root)
+  set --local git_working_dir (cat "$workspace_root/.ws/git_working_dir")
+  set --local exists_locally (command git -C "$workspace_root/.ws/$git_working_dir" show-ref "refs/heads/$branch")
+  set --local exists_remotely (command git -C "$workspace_root/.ws/$git_working_dir" show-ref "refs/remotes/origin/$branch")
+  return (test -n "$exists_locally" -o -n "$exists_remotely")
 end
