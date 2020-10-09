@@ -47,11 +47,11 @@ function _workspace_add --argument-names branch
   set --local git_working_dir (cat "$workspace_root/.ws/git_working_dir")
   if test ! -d "$workspace_root/.ws/$workspace"
     _workspace_log creating workspace `$workspace`
-    command git -C "$workspace_root/.ws/$git_working_dir" worktree add -B "$branch" --guess-remote --quiet "$workspace_root/.ws/$workspace" "$branch"
-    command ln -sf "$workspace_root/.ws/$workspace" "$workspace_root/$workspace"
+    command git -C "$workspace_root/.ws/$git_working_dir" worktree add -B "$branch" --guess-remote --quiet "$workspace_root/.ws/$workspace"
+    command ln -sf "$workspace_root/.ws/$workspace" "$workspace_root"
     if set --query ws_setup_script
       cd "$workspace_root/.ws/$workspace"
-      echo "$ws_setup_script" | source
+      eval $ws_setup_script
     end
   else
     _workspace_log `$workspace` is already exist!
