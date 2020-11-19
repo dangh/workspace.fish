@@ -86,9 +86,21 @@ function _workspace_remove --argument-names branch
   set --local workspace (_workspace_name "$branch")
   set --local git_working_dir (cat "$workspace_root/.ws/git_working_dir")
   set --local current_workspace (_workspace_name (command git branch --show-current))
+  set --local force FALSE
+  getopts $argv | while read --local key value
+    switch $key
+    case f force
+      set force TRUE
+    end
+  end
   if test -d "$workspace_root/.ws/$workspace"
-    command git -C "$workspace_root/.ws/$git_working_dir" worktree remove "$workspace"
-    command git -C "$workspace_root/.ws/$git_working_dir" branch -d "$branch"
+    if test "$force" = "TRUE"
+      command git -C "$workspace_root/.ws/$git_working_dir" worktree remove "$workspace" --force
+      command git -C "$workspace_root/.ws/$git_working_dir" branch -D "$branch"
+    else
+      command git -C "$workspace_root/.ws/$git_working_dir" worktree remove "$workspace"
+      command git -C "$workspace_root/.ws/$git_working_dir" branch -d "$branch"
+    end
     command rm "$workspace_root/$workspace"
   end
   if test "$workspace" = "$current_workspace"
