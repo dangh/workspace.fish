@@ -11,7 +11,13 @@ function __workspace_worktree_list
 end
 
 function __workspace_branch_list
-  git branch --remote --format '%(refname:lstrip=3)'
+  set --local git_working_dir
+  set --local git_args
+  if test -e .ws/git_working_dir
+    set git_working_dir .ws/(command cat .ws/git_working_dir)
+    set git_args "-C" $git_working_dir
+  end
+  git $git_args branch --remote --format '%(refname:lstrip=3)'
 end
 
 set --local subcommands init add rm remove ls list co checkout
