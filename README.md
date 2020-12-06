@@ -3,7 +3,8 @@ utilities to work with git worktree
 
 # setup
 ```sh
-fisher add dangh/fish-workspace
+fisher install jorgebucaran/getopts.fish
+fisher install dangh/workspace.fish
 ```
 
 #usage
