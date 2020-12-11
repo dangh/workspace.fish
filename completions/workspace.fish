@@ -5,9 +5,7 @@ function __workspace_worktree_list
     set git_working_dir .ws/(command cat .ws/git_working_dir)
     set git_args "-C" $git_working_dir
   end
-  for i in (command git $git_args worktree list)
-    string replace -r '^.*/.ws/(.+?)\s+\w{9}\s\[.+\]$' '$1' $i
-  end
+  string match --regex --all 'worktree .*/\.ws/(.*)' (git $git_args worktree list --porcelain) | awk 'NR % 2 == 0'
 end
 
 function __workspace_branch_list
