@@ -1,13 +1,12 @@
 # fish-workspace
 utilities to work with git worktree
 
-# setup
+## setup
 ```sh
-fisher install jorgebucaran/getopts.fish
-fisher install dangh/workspace.fish
+fisher install dangh/withd.fish dangh/workspace.fish
 ```
 
-#usage
+## usage
 
 ```sh
 # setup new workspace from a git repo
@@ -24,4 +23,11 @@ workspace remove my-branch
 
 # list all worktree
 workspace list
+```
+
+## options
+
+```sh
+# this script will be executed when add a new worktree
+set -U ws_setup_script 'test -f package.json && npm install --silent >/dev/null'
 ```

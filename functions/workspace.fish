@@ -1,4 +1,8 @@
 function workspace --argument-names command
+  if ! test -n "$_workspace_root"
+    _workspace_confirm "workspace haven't initialized yet! do it now?" && _workspace_init
+    return
+  end
   switch $command
     case init
       _workspace_init
@@ -16,120 +20,107 @@ function workspace --argument-names command
 end
 
 function _workspace_init
-  if string match --quiet --regex '/\.ws(/|$)' (pwd -P)
+  if test -n "$_workspace_root"
     _workspace_log workspace already initialized!
     return 1
   end
-
-  set --local workspace_root (command git rev-parse --show-toplevel)
-  set --local workspace (_workspace_name (command git branch --show-current))
-  command mv "$workspace_root" "{$workspace_root}-tmp"
-  command mkdir -p "$workspace_root/.ws"
-  command mv "{$workspace_root}-tmp" "$workspace_root/.ws/$workspace"
-  echo "$workspace" > "$workspace_root/.ws/git_working_dir"
-  command ln -sf "$workspace_root/.ws/$workspace" "$workspace_root/$workspace"
-  if set --query ws_setup_script
-    cd "$workspace_root/.ws/$workspace"
-    echo "$ws_setup_script" | source
-  end
-  cd "$workspace_root/$workspace"
+  set --local root (command git rev-parse --show-toplevel)
+  set --local branch (command git branch --show-current)
+  set --local worktree (_workspace_path $branch)
+  command mv "$root" "{$root}-tmp" &&
+  command mkdir -p "$root/.ws" &&
+  command mv "{$root}-tmp" "$worktree" &&
+  command ln -sf "$worktree" "$root/.ws/.git_working_dir" &&
+  command ln -sf "$worktree" (_workspace_alias $branch) &&
+  test -n "$ws_setup_script" && withd "$worktree" "$ws_setup_script"
 end
 
 function _workspace_list
   set --local workspace_root (_workspace_root)
-  set --local git_working_dir (cat "$workspace_root/.ws/git_working_dir")
-  command git -C "$workspace_root/.ws/$git_working_dir" worktree list
+  _workspace_git worktree list
 end
 
-function _workspace_add --argument-names branch --description "create new workspace for new branch"
-  set --local workspace_root (_workspace_root)
-  set --local workspace (_workspace_name "$branch")
-  set --local git_working_dir (cat "$workspace_root/.ws/git_working_dir")
-  if test ! -d "$workspace_root/.ws/$workspace"
-    _workspace_log creating workspace `$workspace`
-    command git -C "$workspace_root/.ws/$git_working_dir" worktree add -B "$branch" --guess-remote --quiet "$workspace_root/.ws/$workspace"
-    command ln -sf "$workspace_root/.ws/$workspace" "$workspace_root"
-    if set --query ws_setup_script
-      cd "$workspace_root/.ws/$workspace"
-      eval $ws_setup_script
-    end
-  else
-    _workspace_log `$workspace` is already exist!
+function _workspace_add --argument-names branch --description "create new branch and checkout in it's worktree"
+  set --local worktree (_workspace_path "$branch")
+
+  if test -d "$worktree"
+    _workspace_log worktree (set_color magenta)$worktree(set_color normal) is already exists!
+    _workspace_log checkout (set_color magenta)$branch(set_color normal) as (set_color green)workspace checkout $branch(set_color normal)
+    return 1
   end
-  _workspace_checkout $branch
+  if _workspace_branch_exists $branch
+    _workspace_log branch (set_color magenta)$branch(set_color normal) is already exists!
+    _workspace_log checkout (set_color magenta)$branch(set_color normal) as (set_color green)workspace checkout $branch(set_color normal)
+    return 1
+  end
+
+  _workspace_log creating branch (set_color magenta)$branch(set_color normal) at worktree (set_color magenta)$worktree(set_color normal)
+  if _workspace_git worktree add -B "$branch" --checkout --quiet --track --guess-remote "$worktree"
+    command ln -sf "$worktree" "$_workspace_root"
+    test -n "$ws_setup_script" && withd "$worktree" "$ws_setup_script"
+    cd (_workspace_alias $branch)
+  end
 end
 
-function _workspace_checkout --argument-names branch --description "create/checkout workspace for existing branch"
-  _workspace_log checkout `$branch`
-  set --local workspace_root (_workspace_root)
-  set --local workspace (_workspace_name "$branch")
-  set --local git_working_dir (cat "$workspace_root/.ws/git_working_dir")
-  if test ! -d "$workspace_root/.ws/$workspace"
-    if _workspace_branch_exists "$branch"
-      command git -C "$workspace_root/.ws/$git_working_dir" worktree add --guess-remote "$workspace_root/.ws/$workspace" "$branch"
-      command ln -sf "$workspace_root/.ws/$workspace" "$workspace_root"
-      if set --query ws_setup_script
-        cd "$workspace_root/.ws/$workspace"
-        eval $ws_setup_script
-      end
-    else
-      _workspace_log branch `$workspace` not found!
-      _workspace_log create `$workspace` as (set_color magenta)workspace add $workspace(set_color normal)
+function _workspace_checkout --argument-names branch --description "checkout existing branch in it's worktree"
+  set --local worktree (_workspace_path $branch)
+
+  if ! _workspace_branch_exists $branch
+    _workspace_log branch (set_color magenta)$branch(set_color normal) does not exists!
+    _workspace_log create (set_color magenta)$branch(set_color normal) as (set_color green)workspace add $branch(set_color normal)
+    return 1
+  end
+
+  if ! test -d "$worktree"
+    _workspace_log checkout (set_color magenta)$branch(set_color normal) at worktree (set_color magenta)$worktree(set_color normal)
+    if _workspace_git worktree add --checkout --quiet --track --guess-remote "$worktree" "$branch"
+      command ln -sf "$worktree" "$_workspace_root"
+      test -n "$ws_setup_script" && withd "$worktree" "$ws_setup_script"
     end
   end
-  cd "$workspace_root/$workspace"
+
+  cd (_workspace_alias $branch)
 end
 
 function _workspace_remove --argument-names branch
-  _workspace_log remove `$branch`
-  set --local workspace_root (_workspace_root)
-  set --local workspace (_workspace_name "$branch")
-  set --local git_working_dir (cat "$workspace_root/.ws/git_working_dir")
-  set --local current_workspace (_workspace_name (command git branch --show-current))
-  set --local force FALSE
-  getopts $argv | while read --local key value
-    switch $key
-    case f force
-      set force TRUE
-    end
-  end
-  if test -d "$workspace_root/.ws/$workspace"
-    if test "$force" = "TRUE"
-      command git -C "$workspace_root/.ws/$git_working_dir" worktree remove "$workspace" --force
-      command git -C "$workspace_root/.ws/$git_working_dir" branch -D "$branch"
-    else
-      command git -C "$workspace_root/.ws/$git_working_dir" worktree remove "$workspace"
-      command git -C "$workspace_root/.ws/$git_working_dir" branch -d "$branch"
-    end
-    command rm "$workspace_root/$workspace"
-  end
-  if test "$workspace" = "$current_workspace"
-    cd "$workspace_root"
-  end
-  _workspace_list
-end
+  set --local worktree (_workspace_path "$branch")
+  set --local current_workspace (_workspace_path (command git branch --show-current))
 
-function _workspace_root
-  set --local workspace_root (string replace --regex "/.ws/.*" "" -- (pwd -P))
-  if test ! -d "$workspace_root/.ws"
-    _workspace_log not a git workspace!
+  set --local found_worktree
+  set --local found_branch
+  set --local found_both
+  _workspace_worktrees | while read --local w b
+    test "$worktree" = "$w" && set found_worktree TRUE
+    test "$branch" = "$b" && set found_branch TRUE
+    test "$worktree" = "$w" -a "$branch" = "$b" && set found_both TRUE
+  end
+  if test "$found_worktree" != TRUE
+    _workspace_log worktree (set_color magenta)$worktree(set_color normal) does not exists!
     return 1
   end
-  echo $workspace_root
-end
+  if test "$found_branch" != TRUE
+    _workspace_log branch (set_color magenta)$branch(set_color normal) does not exists locally!
+    return 1
+  end
+  if test "$found_both" != TRUE
+    _workspace_log branch (set_color magenta)$branch(set_color normal) does not associate with worktree (set_color magenta)$worktree(set_color normal)!
+    return 1
+  end
 
-function _workspace_name
-  string replace --all --regex "[^a-zA-Z0-9-_]" "-" "$argv"
-end
+  argparse --ignore-unknown 'f/force' -- $argv
 
-function _workspace_log
-  echo '('(set_color green)workspace(set_color normal)')' $argv
-end
+  _workspace_log delete branch (set_color magenta)$branch(set_color normal) and worktree (set_color magenta)$worktree(set_color normal)
+  if test -d "$worktree"
+    if set --query _flag_force
+      _workspace_git worktree remove "$worktree" --force &&
+      _workspace_git branch -D "$branch" &&
+      command rm (_workspace_alias $branch)
+    else
+      _workspace_git worktree remove "$worktree" &&
+      _workspace_git branch -d "$branch" &&
+      command rm (_workspace_alias $branch)
+    end
+  end
 
-function _workspace_branch_exists --argument-names branch
-  set --local workspace_root (_workspace_root)
-  set --local git_working_dir (cat "$workspace_root/.ws/git_working_dir")
-  set --local exists_locally (command git -C "$workspace_root/.ws/$git_working_dir" show-ref "refs/heads/$branch")
-  set --local exists_remotely (command git -C "$workspace_root/.ws/$git_working_dir" show-ref "refs/remotes/origin/$branch")
-  return (test -n "$exists_locally" -o -n "$exists_remotely")
+  test "$worktree" = "$current_workspace" && cd $_workspace_root
 end

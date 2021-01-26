@@ -1,34 +1,15 @@
-function __workspace_worktree_list
-  set --local git_working_dir
-  set --local git_args
-  if test -e .ws/git_working_dir
-    set git_working_dir .ws/(command cat .ws/git_working_dir)
-    set git_args "-C" $git_working_dir
-  end
-  string match --regex --all 'worktree .*/\.ws/(.*)' (git $git_args worktree list --porcelain) | awk 'NR % 2 == 0'
-end
-
-function __workspace_branch_list
-  set --local git_working_dir
-  set --local git_args
-  if test -e .ws/git_working_dir
-    set git_working_dir .ws/(command cat .ws/git_working_dir)
-    set git_args "-C" $git_working_dir
-  end
-  git $git_args branch --remote --format '%(refname:lstrip=3)'
-end
-
 set --local subcommands init add rm remove ls list co checkout
 
-complete --keep-order --no-files --command workspace --condition "not __fish_seen_subcommand_from $subcommands; and not __fish_seen_subcommand_from (__workspace_worktree_list)" --arguments remove --description "delete branch"
-complete --keep-order --no-files --command workspace --condition "not __fish_seen_subcommand_from $subcommands; and not __fish_seen_subcommand_from (__workspace_worktree_list)" --arguments checkout --description "checkout branch"
-complete --keep-order --no-files --command workspace --condition "not __fish_seen_subcommand_from $subcommands; and not __fish_seen_subcommand_from (__workspace_worktree_list)" --arguments add --description "create new branch"
-complete --keep-order --no-files --command workspace --condition "not __fish_seen_subcommand_from $subcommands; and not __fish_seen_subcommand_from (__workspace_worktree_list)" --arguments list --description "list all local branches"
-complete --keep-order --no-files --command workspace --condition "not __fish_seen_subcommand_from $subcommands; and not __fish_seen_subcommand_from (__workspace_worktree_list)" --arguments init --description "init workspace"
+complete --command workspace --condition "not __fish_seen_subcommand_from $subcommands" --arguments remove --description "delete branch"
+complete --command workspace --condition "not __fish_seen_subcommand_from $subcommands" --arguments checkout --description "checkout branch"
+complete --command workspace --condition "not __fish_seen_subcommand_from $subcommands" --arguments add --description "create new branch"
+complete --command workspace --condition "not __fish_seen_subcommand_from $subcommands" --arguments list --description "list all local branches"
+complete --command workspace --condition "not __fish_seen_subcommand_from $subcommands" --arguments init --description "init workspace"
 
-complete --keep-order --no-files --command workspace --condition "__fish_seen_subcommand_from rm remove; and not __fish_seen_subcommand_from (__workspace_worktree_list)" --arguments "(__workspace_worktree_list)"
-complete --keep-order --no-files --command workspace --condition "__fish_seen_subcommand_from checkout co; and not __fish_seen_subcommand_from (__workspace_worktree_list)" --arguments "(__workspace_branch_list)"
+complete --command workspace --condition "__fish_seen_subcommand_from rm remove; and not __fish_seen_subcommand_from (_workspace_associated_branches)" --arguments "(_workspace_associated_branches)"
+complete --command workspace --condition "__fish_seen_subcommand_from checkout co; and not __fish_seen_subcommand_from (_workspace_all_branches)" --arguments "(_workspace_all_branches)"
 
-complete --keep-order --no-files --command workspace --condition "not __fish_seen_subcommand_from $subcommands; and not __fish_seen_subcommand_from (__workspace_worktree_list)" --arguments "(__workspace_worktree_list)" --description "checkout"
+# checkout command is optional
+complete --command workspace --condition "not __fish_seen_subcommand_from $subcommands; and not __fish_seen_subcommand_from (_workspace_all_branches)" --arguments "(_workspace_all_branches)" --description "checkout"
 
-complete --keep-order --no-files --command workspace
+complete --no-files --command workspace
