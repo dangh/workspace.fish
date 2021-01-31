@@ -43,7 +43,10 @@ function _workspace_worktrees --description "list all worktrees with branches"
 end
 
 function _workspace_all_branches --description "list all local/remote branches"
-  awk '{ if(match($2, /refs\/heads\/|refs\/remotes\/[^\/]+\//)) print substr($2, RSTART+RLENGTH) }' $_workspace_root/.ws/.git_working_dir/.git/info/refs
+  # local branches
+  _workspace_git for-each-ref --format='%(refname:strip=2)' refs/heads/ 2>/dev/null
+  # remote branches
+  _workspace_git for-each-ref --format='%(refname:strip=3)' refs/remotes/ 2>/dev/null
 end
 
 function _workspace_associated_branches --description "list all associated branches"
