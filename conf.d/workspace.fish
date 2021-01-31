@@ -1,8 +1,5 @@
 status is-interactive || exit
 
-# load built-in git functions
-source $__fish_data_dir/completions/git.fish
-
 function _workspace_log --description "print log"
   echo '('(set_color yellow)workspace(set_color normal)')' $argv
 end
@@ -13,7 +10,7 @@ function _workspace_root --on-variable PWD --description "resolve workspace loca
   else
     set --global _workspace_root (string match --regex -- '(.*)/\.ws($|/.*)' (pwd -P))[2]
   end
-end
+end && _workspace_root
 
 function _workspace_git --description "execute git command with workspace config"
   set --local git_config $_workspace_root/.ws/.git_working_dir
@@ -46,23 +43,11 @@ function _workspace_worktrees --description "list all worktrees with branches"
 end
 
 function _workspace_all_branches --description "list all local/remote branches"
-  __fish_git_unique_remote_branches
-  __fish_git_local_branches | while read --local b _
-    echo $b
-  end
+  awk '{ if(match($2, /refs\/heads\/|refs\/remotes\/[^\/]+\//)) print substr($2, RSTART+RLENGTH) }' $_workspace_root/.ws/.git_working_dir/.git/info/refs
 end
 
 function _workspace_associated_branches --description "list all associated branches"
-  _workspace_worktrees | while read --local w b
-    echo $b
-  end
-end
-
-function _workspace_unassociated_branches --description "list all unassociated branches"
-  set --local assoc_branches (_workspace_associated_branches)
-  _workspace_all_branches | while read --local b
-    ! contains $b $assoc_branches && echo $b
-  end
+  _workspace_git worktree list --porcelain | awk '{ if(match($2, /refs\/heads\//)) print substr($2, RSTART+RLENGTH) }'
 end
 
 function _workspace_branch_exists --argument-names branch --description "check branch existence"
