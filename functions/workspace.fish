@@ -55,7 +55,7 @@ function _workspace_add --argument-names branch --description "create new branch
   end
 
   _workspace_log creating branch (set_color magenta)$branch(set_color normal) at worktree (set_color magenta)$worktree(set_color normal)
-  if _workspace_git worktree add -B "$branch" --checkout --quiet --track --guess-remote "$worktree"
+  if _workspace_git worktree add -B "$branch" --checkout --quiet "$worktree"
     command ln -sf "$worktree" "$_workspace_root"
     test -n "$ws_setup_script" && withd "$worktree" "$ws_setup_script"
     cd (_workspace_alias $branch)
