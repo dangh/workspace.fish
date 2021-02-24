@@ -42,11 +42,17 @@ function _workspace_worktrees --description "list all worktrees with branches"
   end
 end
 
-function _workspace_all_branches --description "list all local/remote branches"
-  # local branches
+function _workspace_local_branches
   _workspace_git for-each-ref --format='%(refname:strip=2)' refs/heads/ 2>/dev/null
-  # remote branches
+end
+
+function _workspace_remote_branches
   _workspace_git for-each-ref --format='%(refname:strip=3)' refs/remotes/ 2>/dev/null
+end
+
+function _workspace_all_branches --description "list all local/remote branches"
+  _workspace_local_branches
+  _workspace_remote_branches
 end
 
 function _workspace_associated_branches --description "list all associated branches"

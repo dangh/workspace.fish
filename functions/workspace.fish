@@ -73,7 +73,9 @@ function _workspace_checkout --argument-names branch --description "checkout exi
 
   if ! test -d "$worktree"
     _workspace_log checkout (set_color magenta)$branch(set_color normal) at worktree (set_color magenta)$worktree(set_color normal)
-    if _workspace_git worktree add --checkout --quiet --track --guess-remote "$worktree" "$branch"
+    set --local flags --checkout --quiet
+    contains "$branch" (_workspace_local_branches) || set --append flags --track
+    if _workspace_git worktree add $flags "$worktree" "$branch"
       command ln -sf "$worktree" "$_workspace_root"
       test -n "$ws_setup_script" && withd "$worktree" "$ws_setup_script"
     end
