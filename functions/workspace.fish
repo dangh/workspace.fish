@@ -26,10 +26,10 @@ function _workspace_init
   end
   set --local root (command git rev-parse --show-toplevel)
   set --local branch (command git branch --show-current)
-  set --local worktree (_workspace_path $branch)
-  command mv "$root" "{$root}-tmp" &&
+  command mv "$root" "$root-tmp" &&
   command mkdir -p "$root/.ws" &&
-  command mv "{$root}-tmp" "$worktree" &&
+  set --local worktree (_workspace_path $branch)
+  command mv "$root-tmp" "$worktree" &&
   command ln -sf "$worktree" "$root/.ws/.git_working_dir" &&
   command ln -sf "$worktree" (_workspace_alias $branch) &&
   test -n "$ws_setup_script" && withd "$worktree" "$ws_setup_script"
