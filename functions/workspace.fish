@@ -32,6 +32,7 @@ function _workspace_init
   command mv "$root-tmp" "$worktree" &&
   command ln -sf "$worktree" "$root/.ws/.git_working_dir" &&
   command ln -sf "$worktree" (_workspace_alias $branch) &&
+  cd (_workspace_alias $branch) &&
   test -n "$ws_setup_script" && withd "$worktree" "$ws_setup_script"
 end
 
