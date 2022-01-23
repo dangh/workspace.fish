@@ -1,5 +1,17 @@
 status is-interactive || exit
 
+function _workspace_fix --on-variable _workspace_root --description "fix worktree paths when moving to another place"
+  test -n "$_workspace_root" || return
+  set --local gitfile (string replace --regex '/\.ws/([^/]+).*' '/.ws/$1/.git' (pwd -P))
+  test -f "$gitfile" || return
+  read --delimiter='gitdir: ' --local _ gitdir < $gitfile
+  test -d "$gitdir" && return
+  set --local gitdir_fix (string replace --regex '/\.ws/([^/]+).*' '/.ws/.git_working_dir/.git/worktrees/$1' (pwd -P))
+  test -d "$gitdir_fix" || return
+  _workspace_log fixing worktree (set_color magenta)$gitdir(set_color normal) (set_color cyan)'>'(set_color normal) (set_color magenta)$gitdir_fix(set_color normal)
+  echo "gitdir: $gitdir_fix" > $gitfile
+end
+
 function _workspace_log --description "print log"
   echo '('(set_color yellow)workspace(set_color normal)')' $argv
 end
