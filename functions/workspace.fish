@@ -30,8 +30,8 @@ function _workspace_init
   command mkdir -p "$root/.ws" &&
   set --local worktree (_workspace_path $branch)
   command mv "$root-tmp" "$worktree" &&
-  command ln -sf "$worktree" "$root/.ws/.git_working_dir" &&
-  command ln -sf "$worktree" (_workspace_alias $branch) &&
+  ln -sf "$worktree" "$root/.ws/.git_working_dir" &&
+  ln -sf "$worktree" (_workspace_alias $branch) &&
   cd (_workspace_alias $branch) &&
   test -n "$ws_setup_script" && withd "$worktree" "$ws_setup_script"
 end
@@ -57,7 +57,7 @@ function _workspace_add --argument-names branch --description "create new branch
 
   _workspace_log creating branch (set_color magenta)$branch(set_color normal) at worktree (set_color magenta)$worktree(set_color normal)
   if _workspace_git worktree add -B "$branch" --checkout --quiet "$worktree"
-    command ln -sf "$worktree" "$_workspace_root"
+    ln -sf "$worktree" "$_workspace_root"
     test -n "$ws_setup_script" && withd "$worktree" "$ws_setup_script"
     cd (_workspace_alias $branch)
   end
@@ -77,7 +77,7 @@ function _workspace_checkout --argument-names branch --description "checkout exi
     set --local flags --checkout --quiet
     contains "$branch" (_workspace_local_branches) || set --append flags --track
     if _workspace_git worktree add $flags "$worktree" "$branch"
-      command ln -sf "$worktree" "$_workspace_root"
+      ln -sf "$worktree" "$_workspace_root"
       test -n "$ws_setup_script" && withd "$worktree" "$ws_setup_script"
     end
   end

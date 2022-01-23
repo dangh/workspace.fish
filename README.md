@@ -3,7 +3,7 @@ utilities to work with git worktree
 
 ## setup
 ```sh
-fisher install dangh/withd.fish dangh/workspace.fish
+fisher install dangh/relpath.fish dangh/withd.fish dangh/workspace.fish
 ```
 
 ## usage
