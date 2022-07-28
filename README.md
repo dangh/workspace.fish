@@ -30,4 +30,10 @@ workspace list
 ```sh
 # this script will be executed when add a new worktree
 set -U ws_setup_script 'test -f package.json && npm install --silent >/dev/null'
+
+# preserve path when switch workspace
+set -U ws_preserve_path
+echo $PWD  # -> workspace-1/nested/dir
+workspace checkout workspace-2
+echo $PWD  # -> workspace-2/nested/dir
 ```

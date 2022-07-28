@@ -82,7 +82,19 @@ function _workspace_checkout --argument-names branch --description "checkout exi
     end
   end
 
-  cd (_workspace_alias $branch)
+  set --local target (_workspace_alias $branch)
+  if set --query ws_preserve_path
+    if string match (_workspace_path)\* $PWD
+      string replace (_workspace_path) '' $PWD | read --delimiter / --local _ suffix
+      if test -n "$suffix"
+        set target $target/$suffix
+        while not test -d $target
+          set target (path dirname $target)
+        end
+      end
+    end
+  end
+  cd $target
 end
 
 function _workspace_remove --argument-names branch
