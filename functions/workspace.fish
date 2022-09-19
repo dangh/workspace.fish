@@ -1,4 +1,4 @@
-function workspace --argument-names command
+function workspace -a command
   if ! test -n "$_workspace_root"
     _workspace_confirm "workspace haven't initialized yet! do it now?" && _workspace_init
     return
@@ -24,11 +24,11 @@ function _workspace_init
     _workspace_log workspace already initialized!
     return 1
   end
-  set --local root (command git rev-parse --show-toplevel)
-  set --local branch (command git branch --show-current)
+  set -l root (command git rev-parse --show-toplevel)
+  set -l branch (command git branch --show-current)
   command mv "$root" "$root-tmp" &&
   command mkdir -p "$root/.ws" &&
-  set --local worktree (_workspace_path $branch)
+  set -l worktree (_workspace_path $branch)
   command mv "$root-tmp" "$worktree" &&
   ln -sf "$worktree" "$root/.ws/.git_working_dir" &&
   ln -sf "$worktree" (_workspace_alias $branch) &&
@@ -37,12 +37,12 @@ function _workspace_init
 end
 
 function _workspace_list
-  set --local workspace_root (_workspace_root)
+  set -l workspace_root (_workspace_root)
   _workspace_git worktree list
 end
 
-function _workspace_add --argument-names branch --description "create new branch and checkout in it's worktree"
-  set --local worktree (_workspace_path "$branch")
+function _workspace_add -a branch -d "create new branch and checkout in it's worktree"
+  set -l worktree (_workspace_path "$branch")
 
   if test -d "$worktree"
     _workspace_log worktree (set_color magenta)$worktree(set_color normal) is already exists!
@@ -63,8 +63,8 @@ function _workspace_add --argument-names branch --description "create new branch
   end
 end
 
-function _workspace_checkout --argument-names branch --description "checkout existing branch in it's worktree"
-  set --local worktree (_workspace_path $branch)
+function _workspace_checkout -a branch -d "checkout existing branch in it's worktree"
+  set -l worktree (_workspace_path $branch)
 
   if ! _workspace_branch_exists $branch
     _workspace_log branch (set_color magenta)$branch(set_color normal) does not exists!
@@ -74,18 +74,18 @@ function _workspace_checkout --argument-names branch --description "checkout exi
 
   if ! test -d "$worktree"
     _workspace_log checkout (set_color magenta)$branch(set_color normal) at worktree (set_color magenta)$worktree(set_color normal)
-    set --local flags --checkout --quiet
-    contains "$branch" (_workspace_local_branches) || set --append flags --track
+    set -l flags --checkout --quiet
+    contains "$branch" (_workspace_local_branches) || set -a flags --track
     if _workspace_git worktree add $flags "$worktree" "$branch"
       ln -sf "$worktree" "$_workspace_root"
       test -n "$ws_setup_script" && withd "$worktree" "$ws_setup_script"
     end
   end
 
-  set --local target (_workspace_alias $branch)
-  if set --query ws_preserve_path
+  set -l target (_workspace_alias $branch)
+  if set -q ws_preserve_path
     if string match (_workspace_path)\* $PWD
-      string replace (_workspace_path) '' $PWD | read --delimiter / --local _ suffix
+      string replace (_workspace_path) '' $PWD | read -l -d / _ suffix
       if test -n "$suffix"
         set target $target/$suffix
         while not test -d $target
@@ -97,14 +97,14 @@ function _workspace_checkout --argument-names branch --description "checkout exi
   cd $target
 end
 
-function _workspace_remove --argument-names branch
-  set --local worktree (_workspace_path "$branch")
-  set --local current_workspace (_workspace_path (command git branch --show-current))
+function _workspace_remove -a branch
+  set -l worktree (_workspace_path "$branch")
+  set -l current_workspace (_workspace_path (command git branch --show-current))
 
-  set --local found_worktree
-  set --local found_branch
-  set --local found_both
-  _workspace_worktrees | while read --local w b
+  set -l found_worktree
+  set -l found_branch
+  set -l found_both
+  _workspace_worktrees | while read -l w b
     test "$worktree" = "$w" && set found_worktree TRUE
     test "$branch" = "$b" && set found_branch TRUE
     test "$worktree" = "$w" -a "$branch" = "$b" && set found_both TRUE
@@ -122,11 +122,11 @@ function _workspace_remove --argument-names branch
     return 1
   end
 
-  argparse --ignore-unknown 'f/force' -- $argv
+  argparse -i 'f/force' -- $argv
 
   _workspace_log delete branch (set_color magenta)$branch(set_color normal) and worktree (set_color magenta)$worktree(set_color normal)
   if test -d "$worktree"
-    if set --query _flag_force
+    if set -q _flag_force
       _workspace_git worktree remove "$worktree" --force &&
       _workspace_git branch -D "$branch" &&
       command rm (_workspace_alias $branch)
