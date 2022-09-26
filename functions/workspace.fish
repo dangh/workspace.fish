@@ -12,7 +12,7 @@ function workspace -a command
       _workspace_remove $argv[2..-1]
     case ls list ""
       _workspace_list $arvg[2..-1]
-    case co checkout
+    case co checkout p pull
       _workspace_checkout $argv[2..-1]
     case \*
       _workspace_checkout $argv

@@ -80,6 +80,7 @@ if ! set -q _workspace_plugin_initialized
   abbr -a w workspace
   abbr -a wa workspace add
   abbr -a wco workspace checkout
+  abbr -a wp workspace pull
   abbr -a wl workspace list
   abbr -a wls workspace list
   abbr -a wr workspace remove
