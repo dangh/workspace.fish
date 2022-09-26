@@ -75,8 +75,7 @@ function _workspace_branch_exists -a branch -d "check branch existence"
   contains $branch (_workspace_all_branches)
 end
 
-if ! set -q _workspace_plugin_initialized
-  set -U _workspace_plugin_initialized (date)
+function _workspace_install -e workspace_install -e workspace_update
   abbr -a w workspace
   abbr -a wa workspace add
   abbr -a wco workspace checkout
@@ -85,4 +84,16 @@ if ! set -q _workspace_plugin_initialized
   abbr -a wls workspace list
   abbr -a wr workspace remove
   abbr -a wrm workspace remove
+end
+
+function _workspace_uninstall -e workspace_uninstall
+  set -e _workspace_plugin_initialized
+  abbr -e w
+  abbr -e wa
+  abbr -e wco
+  abbr -e wp
+  abbr -e wl
+  abbr -e wls
+  abbr -e wr
+  abbr -e wrm
 end
