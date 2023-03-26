@@ -4,7 +4,7 @@ function _workspace_fix -v _workspace_root -d "fix worktree paths when moving to
   test -n "$_workspace_root" || return
   set -l gitfile (string replace -r '/\.ws/([^/]+).*' '/.ws/$1/.git' (pwd -P))
   test -f "$gitfile" || return
-  read -l -d 'gitdir: ' _ gitdir < $gitfile
+  read -l -d 'gitdir: ' _0 gitdir < $gitfile
   test -d "$gitdir" && return
   set -l gitdir_fix (string replace -r '/\.ws/([^/]+).*' '/.ws/.git_working_dir/.git/worktrees/$1' (pwd -P))
   test -d "$gitdir_fix" || return
