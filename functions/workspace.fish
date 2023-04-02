@@ -85,7 +85,7 @@ function _workspace_checkout -a branch -d "checkout existing branch in it's work
   set -l target (_workspace_alias $branch)
   if set -q ws_preserve_path
     if string match (_workspace_path)\* $PWD
-      string replace (_workspace_path) '' $PWD | read -l -d / _ suffix
+      string replace (_workspace_path) '' $PWD | read -l -d / _0 suffix
       if test -n "$suffix"
         set target $target/$suffix
         while not test -d $target
