@@ -97,7 +97,10 @@ function _workspace_checkout -a branch -d "checkout existing branch in it's work
   cd $target
 end
 
-function _workspace_remove -a branch
+function _workspace_remove
+  argparse -i 'f/force' -- $argv
+  set -l branch "$argv[1]"
+
   set -l worktree (_workspace_path "$branch")
   set -l current_workspace (_workspace_path (command git branch --show-current))
 
@@ -121,8 +124,6 @@ function _workspace_remove -a branch
     _workspace_log branch (set_color magenta)$branch(set_color normal) does not associate with worktree (set_color magenta)$worktree(set_color normal)!
     return 1
   end
-
-  argparse -i 'f/force' -- $argv
 
   _workspace_log delete branch (set_color magenta)$branch(set_color normal) and worktree (set_color magenta)$worktree(set_color normal)
   if test -d "$worktree"
