@@ -78,14 +78,13 @@ function _workspace_remember -e fish_prompt -d "remember last working space"
     set -U _workspace_last_worktree $_workspace_root/$_workspace
 end
 
-function _workspace_uninstall -e workspace_uninstall
-    set -e _workspace_plugin_initialized
-    abbr -e w
-    abbr -e wa
-    abbr -e wco
-    abbr -e wp
-    abbr -e wl
-    abbr -e wls
-    abbr -e wr
-    abbr -e wrm
-end
+set -q ws_remember && test "$PWD" = "$HOME" && cd $_workspace_last_worktree
+
+abbr -a w workspace
+abbr -a wa workspace add
+abbr -a wco workspace checkout
+abbr -a wp workspace pull
+abbr -a wl workspace list
+abbr -a wls workspace list
+abbr -a wr workspace remove
+abbr -a wrm workspace remove
