@@ -74,9 +74,7 @@ function _workspace_checkout -a branch -d "checkout existing branch in it's work
 
     if ! test -d "$worktree"
         _workspace_log checkout (set_color magenta)$branch(set_color normal) at worktree (set_color magenta)$worktree(set_color normal)
-        set -l flags --checkout --quiet
-        if _workspace_git worktree add $flags "$worktree" -b "$branch"
-            _workspace_git branch -u origin/$branch $branch
+        if _workspace_git worktree add -b "$branch" "$worktree" "origin/$branch" --quiet
             ln -sf "$worktree" "$_workspace_root"
             test -n "$ws_setup_script" && withd "$worktree" "$ws_setup_script"
         end
