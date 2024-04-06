@@ -1,17 +1,5 @@
 status is-interactive || exit
 
-function _workspace_fix -v _workspace_root -d "fix worktree paths when moving to another place"
-    test -n "$_workspace_root" || return
-    set -l gitfile (string replace -r '/\.ws/([^/]+).*' '/.ws/$1/.git' (pwd -P))
-    test -f "$gitfile" || return
-    read -l -d 'gitdir: ' _0 gitdir <$gitfile
-    test -d "$gitdir" && return
-    set -l gitdir_fix (string replace -r '/\.ws/([^/]+).*' '/.ws/.git_working_dir/.git/worktrees/$1' (pwd -P))
-    test -d "$gitdir_fix" || return
-    _workspace_log fixing worktree (set_color magenta)$gitdir(set_color normal) (set_color cyan)'>'(set_color normal) (set_color magenta)$gitdir_fix(set_color normal)
-    echo "gitdir: $gitdir_fix" >$gitfile
-end
-
 function _workspace_log -d "print log"
     echo '('(set_color yellow)workspace(set_color normal)')' $argv
 end
@@ -73,6 +61,14 @@ end
 
 function _workspace_branch_exists -a branch -d "check branch existence"
     contains $branch (_workspace_all_branches)
+end
+
+function _workspace_setup -a worktree -d "run init script for workspace"
+    test -n "$ws_setup_script" || return
+    pushd $PWD
+    cd $worktree
+    eval $ws_setup_script
+    popd
 end
 
 function _workspace_install -e workspace_install -e workspace_update
