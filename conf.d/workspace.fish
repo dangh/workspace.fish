@@ -5,10 +5,13 @@ function _workspace_log -d "print log"
 end
 
 function _workspace_root -v PWD -d "resolve workspace location"
+    set -g _workspace_root
+    set -g _workspace
     if test -d $PWD/.ws
-        set -g _workspace_root $PWD
+        set _workspace_root $PWD
     else
-        set -g _workspace_root (string match -r -- '(.*)/\.ws($|/.*)' (pwd -P))[2]
+        set _workspace_root (string match -r -- '(.*)/\.ws($|/.*)' (pwd -P))[2]
+        set _workspace (string replace $_workspace_root '' $PWD | string match -rg '^/([^/]+)')
     end
 end && _workspace_root
 
@@ -71,15 +74,8 @@ function _workspace_setup -a worktree -d "run init script for workspace"
     popd
 end
 
-function _workspace_install -e workspace_install -e workspace_update
-    abbr -a w workspace
-    abbr -a wa workspace add
-    abbr -a wco workspace checkout
-    abbr -a wp workspace pull
-    abbr -a wl workspace list
-    abbr -a wls workspace list
-    abbr -a wr workspace remove
-    abbr -a wrm workspace remove
+function _workspace_remember -e fish_prompt -d "remember last working space"
+    set -U _workspace_last_worktree $_workspace_root/$_workspace
 end
 
 function _workspace_uninstall -e workspace_uninstall

@@ -36,4 +36,7 @@ set -U ws_preserve_path
 echo $PWD  # -> workspace-1/nested/dir
 workspace checkout workspace-2
 echo $PWD  # -> workspace-2/nested/dir
+
+# open last workspace when spinning up a new shell
+set -U ws_remember
 ```
