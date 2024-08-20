@@ -41,7 +41,8 @@ function _workspace_list
     _workspace_git worktree list
 end
 
-function _workspace_add -a branch -d "create new branch and checkout in it's worktree"
+function _workspace_add -d "create new branch and checkout in it's worktree"
+    set -l branch (string replace -a -r '[^\w]+' -- '-' "$argv" | string lower)
     set -l worktree (_workspace_path "$branch")
 
     if test -d "$worktree"
