@@ -66,12 +66,13 @@ function _workspace_branch_exists -a branch -d "check branch existence"
     contains $branch (_workspace_all_branches)
 end
 
-function _workspace_setup -a worktree -d "run init script for workspace"
-    test -n "$ws_setup_script" || return
-    pushd $PWD
-    cd $worktree
-    eval $ws_setup_script
-    popd
+function _workspace_setup -e workspace_setup -a worktree -d "run init script for workspace"
+    test -f $worktree/package.json && begin
+        fish --private -c "
+            cd $worktree
+            npm install --silent --prefer-offline &>/dev/null
+        "
+    end
 end
 
 function _workspace_remember -e fish_prompt -d "remember last working space"

@@ -33,7 +33,7 @@ function _workspace_init
         ln -sf "$worktree" "$root/.ws/.git_working_dir" &&
         ln -sf "$worktree" (_workspace_alias $branch) &&
         cd (_workspace_alias $branch) &&
-        _workspace_setup $worktree
+        emit workspace_setup $worktree
 end
 
 function _workspace_list
@@ -59,7 +59,7 @@ function _workspace_add -d "create new branch and checkout in it's worktree"
     _workspace_log creating branch (set_color magenta)$branch(set_color normal) at worktree (set_color magenta)$worktree(set_color normal)
     if _workspace_git worktree add -B "$branch" --checkout --quiet "$worktree"
         ln -sf "$worktree" "$_workspace_root"
-        _workspace_setup $worktree
+        emit workspace_setup $worktree
         cd (_workspace_alias $branch)
     end
 end
@@ -77,7 +77,7 @@ function _workspace_checkout -a branch -d "checkout existing branch in it's work
         _workspace_log checkout (set_color magenta)$branch(set_color normal) at worktree (set_color magenta)$worktree(set_color normal)
         if _workspace_git worktree add -b "$branch" "$worktree" "origin/$branch" --quiet
             ln -sf "$worktree" "$_workspace_root"
-            _workspace_setup $worktree
+            emit workspace_setup $worktree
         end
     end
 

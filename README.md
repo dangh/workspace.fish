@@ -28,8 +28,11 @@ workspace list
 ## options
 
 ```sh
-# this script will be executed when add a new worktree
-set -U ws_setup_script 'test -f package.json && npm install --silent >/dev/null'
+# to run a script after create/checkout a worktree
+function workspace_setup_script -e workspace_setup -a workspace
+    # open workspace in default editor
+    $EDITOR $workspace
+end
 
 # preserve path when switch workspace
 set -U ws_preserve_path
