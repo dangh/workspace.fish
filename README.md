@@ -18,6 +18,9 @@ workspace add my-new-branch
 # switch worktree, checkout existing branch and create new worktree if possible
 workspace checkout existing-branch
 
+# move worktree to new path and rename branch
+workspace move branch new-branch
+
 # delete existing branch and worktree
 workspace remove my-branch
 

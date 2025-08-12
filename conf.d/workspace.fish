@@ -89,3 +89,5 @@ abbr -a wl workspace list
 abbr -a wls workspace list
 abbr -a wr workspace remove
 abbr -a wrm workspace remove
+abbr -a wm workspace move
+abbr -a wmv workspace move

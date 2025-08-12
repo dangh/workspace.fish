@@ -14,6 +14,8 @@ function workspace -a command
             _workspace_list $arvg[2..-1]
         case co checkout p pull
             _workspace_checkout $argv[2..-1]
+        case mv move
+            _workspace_move $argv[2..-1]
         case \*
             _workspace_checkout $argv
     end
@@ -138,4 +140,24 @@ function _workspace_remove
     end
 
     test "$worktree" = "$current_workspace" && cd $_workspace_root
+end
+
+function _workspace_move -a old_branch -a new_branch -d "rename branch and move it's worktree"
+    if test -z "$new_branch"
+        set new_branch "$old_branch"
+        set old_branch (command git branch --show-current)
+    end
+
+    set -l old_worktree (_workspace_path $old_branch)
+    set -l new_worktree (_workspace_path $new_branch)
+
+    if ! _workspace_branch_exists $old_branch
+        _workspace_log branch (set_color magenta)$old_branch(set_color normal) does not exists!
+        return 1
+    end
+
+    _workspace_git worktree move "$old_worktree" "$new_worktree" &&
+        _workspace_git branch -m "$old_branch" "$new_branch" &&
+        ln -sf "$new_worktree" (_workspace_alias $new_branch) &&
+        cd (_workspace_alias $new_branch)
 end
