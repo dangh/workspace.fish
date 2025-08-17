@@ -160,4 +160,6 @@ function _workspace_move -a old_branch -a new_branch -d "rename branch and move 
         _workspace_git branch -m "$old_branch" "$new_branch" &&
         ln -sf "$new_worktree" (_workspace_alias $new_branch) &&
         cd (_workspace_alias $new_branch)
+
+    rm -f (_workspace_alias $old_branch) >/dev/null 2>&1
 end
